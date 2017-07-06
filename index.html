@@ -27,23 +27,28 @@
 		<title>Lista Telefonica</title>
 		<script src="lib/angular/angular.js"></script>
 		<script src="lib/angular/angular-messages.js"></script>
+		<script src="lib/angular/angular-locale_pt-br.js"></script>
 		<script>
 			angular.module("listaTelefonica", []);
-			angular.module("listaTelefonica").controller("listaTelefonicaCtrl", function($scope){
+			angular.module("listaTelefonica").controller("listaTelefonicaCtrl", function($scope, $http, $filter){
 				$scope.app = "Lista Telefonica";
-				$scope.contatos = [
-				{nome: "Pedro", telefone: "99999999", data: new Date(), operadora: {nome: "Oi", codigo: 14, categoria: "Celular"} },
-				{nome: "Ana", telefone: "98888777", data: new Date(), operadora: {nome: "Vivo", codigo: 15, categoria: "Celular"}},
-				{nome: "Maria", telefone: "97779888", data: new Date(), operadora: {nome: "Tim", codigo: 41, categoria: "Celular"}}
-				];
-				$scope.operadoras = [
-				{nome: "Oi", codigo: 14, categoria: "Celular", preco: 2},
-				{nome: "Vivo", codigo: 15, categoria: "Celular", preco: 4 },
-				{nome: "Tim", codigo: 41, categoria: "Celular", preco: 3 },
-				{nome: "GVT", codigo: 25, categoria: "Fixo", preco: 1 },
-				{nome: "Embratel", codigo: 21, categoria: "Fixo", preco: 3 }
-				];
+				$scope.contatos = [];
+				$scope.operadoras = [];
+
+				var carregarContatos = function (){
+					$http.get("http://localhost:3412/contatos").then(function(response){
+						$scope.contatos = response.data;
+					});	
+				};
+
+				var carregarOperadoras = function (){
+					$http.get("http://localhost:3412/operadoras").then(function(response){
+						$scope.operadoras = response.data;
+					});	
+				};
+
 				$scope.adicionarContato = function (contato){
+					contato.data = new Date();
 					$scope.contatos.push(angular.copy(contato));
 					delete $scope.contato;
 					$scope.contatoForm.$setPristine();
@@ -62,13 +67,16 @@
 					$scope.criterioDeOrdenacao = campo;
 					$scope.direcaoDaOrdenacao = !$scope.direcaoDaOrdenacao;
 				};
+
+				carregarContatos();
+				carregarOperadoras();
 			});
 		</script>
 	</head>
 	<body ng-controller="listaTelefonicaCtrl">
 		<div class="jumbotron">
 			<h3>{{app}}</h3>
-			<input class="form-control" type="text" ng-model="criterioBusca" placeholder="O que você está buscando?"/>
+			<input class="form-control" type="text" ng-model="criterioBusca" placeholder="Buscar"/>
 			<table ng-show="contatos.length > 0" class="table table-striped">
 				<tr>	
 					<th></th>
@@ -79,9 +87,9 @@
 				</tr>
 				<tr ng-class="{'selecionado negrito': contato.selecionado}" ng-repeat="contato in contatos | filter:criterioBusca | orderBy:criterioDeOrdenacao:direcaoDaOrdenacao">
 					<td><input type="checkbox" ng-model="contato.selecionado"/></td>
-					<td>{{contato.nome | uppercase}}</td>
+					<td>{{contato.nome}}</td>
 					<td>{{contato.telefone}}</td>
-					<td>{{contato.operadora.nome | lowercase}}</td>
+					<td>{{contato.operadora.nome}}</td>
 					<td>{{contato.data | date:'dd/MM/yyyy HH:mm'}}</td>
 					
 				</tr>
